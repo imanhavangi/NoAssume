@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in NoAssume behaved wrong
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us what happened. If an agent ignored the guardrail, the
+        transcript excerpt is the single most useful thing you can attach.
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent + model
+      placeholder: e.g. Codex CLI / gpt-5.x, Claude Code / opus
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: NoAssume mode in effect
+      options: [balanced, strict, critical, not sure]
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Transcript excerpt
+      description: Paste the relevant part of the conversation
+      render: text

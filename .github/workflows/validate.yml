@@ -1,0 +1,41 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  repo-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repository consistency checks
+        run: python3 scripts/check_repo.py
+
+  installer-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install into a fixture repo
+        run: |
+          mkdir -p /tmp/fixture && cd /tmp/fixture && git init -q .
+          python3 "$GITHUB_WORKSPACE/scripts/install.py" codex claude cursor --path .
+          test -f .agents/skills/noassume/SKILL.md
+          test -f .noassume/config.yaml
+          grep -q "noassume:begin" AGENTS.md CLAUDE.md
+          grep -q "alwaysApply: true" .cursor/rules/noassume.mdc
+          grep -q ".noassume/local/" .gitignore
+      - name: Re-run is idempotent
+        run: |
+          cd /tmp/fixture
+          python3 "$GITHUB_WORKSPACE/scripts/install.py" codex claude cursor --path . | tee out.txt
+          ! grep -q "(create)" out.txt && ! grep -q "(update)" out.txt
+      - name: Uninstall removes managed content only
+        run: |
+          cd /tmp/fixture
+          python3 "$GITHUB_WORKSPACE/scripts/install.py" codex claude cursor --path . --uninstall
+          ! test -e .agents/skills/noassume/SKILL.md
+          ! test -e .cursor/rules/noassume.mdc
+          ! grep -q "noassume:begin" AGENTS.md CLAUDE.md
+          test -f .noassume/config.yaml

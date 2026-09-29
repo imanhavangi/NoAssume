@@ -1,0 +1,26 @@
+name: Agent adapter request
+description: Ask for support for another coding agent
+labels: ["adapter"]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Agent
+      placeholder: e.g. Windsurf, Aider, Amp
+    validations:
+      required: true
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: Its always-on mechanism
+      description: |
+        Which file/mechanism does this agent read every session?
+        (e.g. RULES.md, .tool/rules/*, a specific config key). A link to its
+        docs is ideal.
+    validations:
+      required: true
+  - type: textarea
+    id: skills
+    attributes:
+      label: Does it have a native skills convention?
+      description: e.g. reads .agents/skills/, has its own skill dir, none

@@ -1,0 +1,27 @@
+name: Missed ambiguity
+description: The agent made a silent assumption NoAssume should have caught
+labels: ["missed-ambiguity"]
+body:
+  - type: textarea
+    id: prompt
+    attributes:
+      label: The prompt you gave the agent
+    validations:
+      required: true
+  - type: textarea
+    id: assumption
+    attributes:
+      label: The assumption it shipped
+      description: What did it decide without asking?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: The question it should have asked
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent + model

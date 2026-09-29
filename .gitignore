@@ -1,0 +1,11 @@
+# NoAssume local state — the working memory of the guardrail, never shared.
+.noassume/local/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
