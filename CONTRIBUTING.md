@@ -45,9 +45,12 @@ documentation in `templates/config.yaml`, `references/config.md`, and
 
 ## Mechanics
 
-- Python 3, no dependencies beyond the stdlib. No build step.
-- Run `python3 scripts/check_repo.py` before submitting — it validates
-  internal links, scenario fields, config keys, and adapter table integrity.
+- Python 3.9+, no dependencies beyond the stdlib. No build step.
+- Run `python3 scripts/check_repo.py` and `python3 scripts/test_install.py`
+  before submitting — the first validates internal links, scenario fields,
+  config keys, and adapter table integrity; the second covers the installer
+  (fresh install, idempotency, conflict handling, uninstall, `--dry-run`,
+  `--global`).
 - Keep terminology exact: it's "ambiguity", "decision class", "protected
   decision", "informed override" — check `references/` before inventing
   synonyms.

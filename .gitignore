@@ -1,6 +1,9 @@
 # NoAssume local state — the working memory of the guardrail, never shared.
 .noassume/local/
 
+# Eval run artifacts (transcripts, diffs, metadata)
+evals/results/
+
 # Python
 __pycache__/
 *.pyc

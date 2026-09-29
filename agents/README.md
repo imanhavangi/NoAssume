@@ -20,9 +20,9 @@ the agent loads the canonical skill before implementing.
 | Agent | Always-on mechanism | Skill location | Global install |
 | --- | --- | --- | --- |
 | Codex | managed block in `AGENTS.md` | `.agents/skills/noassume/` (native) | `~/.codex/AGENTS.md` + `~/.agents/skills/` |
-| Claude Code | managed block in `CLAUDE.md` + `.claude/skills/noassume/` stub | `.agents/skills/noassume/` | `~/.claude/CLAUDE.md` |
+| Claude Code | managed block in `CLAUDE.md` + `.claude/skills/noassume/` stub | `.agents/skills/noassume/` | `~/.claude/CLAUDE.md` + `~/.claude/skills/` stub |
 | Cursor | `.cursor/rules/noassume.mdc` (`alwaysApply`) | `.agents/skills/noassume/` (native) | not file-based — see `cursor.md` |
-| GitHub Copilot | managed block in `.github/copilot-instructions.md` | `.agents/skills/noassume/` | `~/.copilot/copilot-instructions.md` (CLI) |
+| GitHub Copilot | managed block in `.github/copilot-instructions.md` | `.agents/skills/noassume/` (native) | `~/.copilot/copilot-instructions.md` (CLI) |
 | Gemini CLI | managed block in `GEMINI.md` | `.agents/skills/noassume/` | `~/.gemini/GEMINI.md` |
 | Kiro | `.kiro/steering/noassume.md` (`inclusion: always`) | `.agents/skills/noassume/` | `~/.kiro/steering/` |
 | Devin | `.devin/rules/noassume.md` (`trigger: always_on`) | `.agents/skills/noassume/` | `~/.devin/rules/` |

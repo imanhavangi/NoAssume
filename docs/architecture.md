@@ -38,7 +38,8 @@ The unusual parts:
 - **Clarification loops.** Answers create second-order ambiguities. Each
   round re-audits the spec; rounds end at zero, not at a budget.
 - **The gate is binary.** READY requires zero blocking ambiguities, zero
-  material ambiguities, zero unresolved conflicts — plus a written plan and
+  material ambiguities, zero material assumptions, zero unresolved conflicts,
+  and zero unresolved protected decisions — plus a written plan and
   Definition of Done. No score, no "close enough."
 - **The guard outlives the gate.** After READY the protocol keeps watching:
   mid-flight ambiguities pause work, scope drift gets surfaced, and a final
@@ -52,7 +53,9 @@ The unusual parts:
 | --- | --- | --- |
 | `config.yaml` | yes | Team policy — modes and clarify switches |
 | `project.md` | yes | Permanent rules the user promoted from decisions |
-| `local/` | no | Ledgers, plan, discovery cache, history |
+| `local/current/` | no | The live task's ledgers, plan, and state |
+| `local/repository.md` | no | Discovery cache — persists across tasks |
+| `local/history/` | no | Archived ledgers from finished tasks |
 
 The split exists because decisions have two lifetimes: this task's
 (scrapbook) and this project's (law). Promoting a session decision to

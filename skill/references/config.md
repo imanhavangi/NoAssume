@@ -33,12 +33,18 @@ Regardless of `mode`, certain work runs at a floor:
   operations, anything touching production, irreversible changes.
 
 A user can always raise the level for a task ("run this one in critical").
-Nothing lowers it below the floor.
+Nothing lowers it below the floor. The floor is part of the protocol, not the
+config: there is no switch that turns escalation off. The only ways past a
+protected decision are the user's explicit instruction or an informed
+override — never a configuration change.
 
 ## clarify switches
 
 Set a category to `false` to delegate it permanently. `false` means "decide it
-yourself and log it as INFERENCE/DELEGATED" — it never means "don't record it."
+yourself and record the decision as DELEGATED, with `.noassume/config.yaml`
+as the source" — it never means "don't record it", and it never means
+"resolve it by inference". Evidence that suggests but does not prove is still
+not authorization; the config switch is.
 
 | Switch | Covers |
 | --- | --- |
@@ -64,7 +70,6 @@ yourself and log it as INFERENCE/DELEGATED" — it never means "don't record it.
 | `recommend_options` | Show a recommendation on questions. Off = neutral options. |
 | `deep_repository_discovery` | Full discovery pass on first task. Off = quick scan only; expect more questions. |
 | `monitor_implementation` | Keep the implementation guard active after READY. Off = gate-only mode; the audit still runs. |
-| `auto_escalate` | Allow task-risk escalation above the configured mode. Turning it off is possible and inadvisable. |
 
 The shipped defaults are opinionated — see `templates/config.yaml`. Teams tune
 them per repository; that is the point of the file.

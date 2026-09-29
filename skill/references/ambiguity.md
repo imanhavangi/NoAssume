@@ -38,8 +38,11 @@ Every ambiguity gets one of three severities:
   model, anything touching a protected decision, any unresolved CONFLICT.
 - **material** — the implementation will pick one branch or the other and the
   branches differ in ways the user cares about.
-- **defaultable** — a choice the config or repository convention lets you make
-  and log. Still recorded as an INFERENCE; never silent.
+- **defaultable** — a choice the active config delegates or that repository
+  convention settles with sufficient confidence. Recorded as DELEGATED
+  (source: `config.yaml`) or PROVEN (source: the convention) — never silent.
+  A choice that is neither delegated nor proven stays material and gets
+  asked.
 
 Blocking and material ambiguities must reach zero before the gate opens.
 
@@ -95,6 +98,6 @@ silent on scope boundaries and the task could plausibly spill, ask.
 
 ## Recording
 
-Every ambiguity is a row in `.noassume/local/ambiguities.md` with an ID, the
-question, domain, severity, and status. Never track ambiguity only in your
-head — the ledger is what makes the loop auditable.
+Every ambiguity is a row in `.noassume/local/current/ambiguities.md` with an
+ID, the question, domain, severity, and status. Never track ambiguity only in
+your head — the ledger is what makes the loop auditable.

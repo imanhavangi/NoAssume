@@ -33,6 +33,14 @@ explicit, specific confirmation from the user:
 Generic phrases do not cover these. "Just do whatever" does not authorize
 dropping a table.
 
+A direct instruction is authorization. When the user's request itself names
+the protected action and its consequence — "drop the `legacy_sessions` table
+and remove all related code" — the request is the explicit, specific
+confirmation. Do not re-ask what was already specified; the point of the
+protected list is a conscious user, not a form filled twice. If implementation
+later surfaces a protected consequence the request did not cover, that new
+consequence needs its own confirmation.
+
 ## Informed override
 
 An informed override is a specific confirmation, not a vibe. It counts only

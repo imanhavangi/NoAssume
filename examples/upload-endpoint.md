@@ -42,5 +42,5 @@ configured doesn't mean intended for this). What remains:
 > C. Reject with 409
 
 Four questions, one round. The handler that gets written streams to S3 with
-a 25 MB cap and an allowlist — and `.noassume/local/decisions.md` shows why
-every line looks the way it does.
+a 25 MB cap and an allowlist — and `.noassume/local/current/decisions.md`
+shows why every line looks the way it does.

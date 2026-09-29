@@ -27,12 +27,33 @@ decisions, not exact strings, so scoring does not depend on wording.
 
 ## Running a scenario
 
-1. Set up a fixture repository matching the scenario's implied context (some
-   scenarios ship a `## Fixture` section; others assume an empty directory).
-2. Run the prompt twice: once with the agent bare, once with NoAssume
-   installed. Same model, same tools.
-3. Score both runs with `rubric.md`. For the NoAssume run, simulate a user
-   who answers questions consistent with the hidden intent.
+`evals/runner/run.py` automates the mechanics:
+
+```bash
+python3 evals/runner/run.py \
+  --scenario evals/scenarios/infra-compose-port.md \
+  --fixture-dir /path/to/fixture-repo \
+  --agent codex --runs 3
+```
+
+Each run gets a fresh workdir (fixture copied in, git-initialized). The runner
+records the transcript, the diff, and a `metadata.json` with the agent
+command, model, agent version, NoAssume commit, scenario, and UTC timestamp
+under `evals/results/<scenario-id>/<timestamp>/`. Scoring is still human
+judgment with `rubric.md`.
+
+Two rules keep the benchmark honest:
+
+1. **The agent never sees the scoring metadata.** The runner exposes only the
+   `## Prompt` section plus the fixture. `## Hidden intent`, `## Must
+   clarify`, and `## Assumption traps` stay with the evaluator — if the
+   runner leaks them into the prompt or the workdir, the run is void.
+2. **Run each scenario several times.** One run proves nothing about
+   stochastic model behavior; record every run, not the best one.
+
+For the NoAssume arm of a comparison, install NoAssume into the fixture
+first (`scripts/install.py <agent> --path <fixture>`) and simulate a user who
+answers questions consistent with the hidden intent.
 
 Human judgment is the scorer for now. Automated scoring is welcome once the
 fixtures prove stable — see `CONTRIBUTING.md`.

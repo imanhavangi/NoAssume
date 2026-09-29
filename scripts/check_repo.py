@@ -95,8 +95,6 @@ for f in scenarios:
     for sec in required_sections:
         if sec not in body:
             err(f"{f.name}: missing section '{sec}'")
-    if f"../" in fm and not (f.parent / fm).exists():
-        pass
 
 # --- 5. Config keys consistent across shipped files --------------------------
 

@@ -32,24 +32,41 @@ Agent: [BLOCKING] Host exposure — postgres publishes no ports and services
 
 Three questions replace three wrong guesses. More in `examples/`.
 
-## Install
+## Quick start
 
 Clone this repo, then point the installer at yours:
 
 ```bash
-./scripts/install.sh codex --path /path/to/your/repo
-./scripts/install.sh codex claude cursor --path /path/to/your/repo   # several
-./scripts/install.sh codex --global                                # all repos
+git clone https://github.com/imanhavangi/NoAssume.git
+cd NoAssume
+./scripts/install.sh codex --path ~/code/my-project
+./scripts/install.sh codex claude cursor --path ~/code/my-project   # several
+./scripts/install.sh codex --global                                 # all repos
 ```
 
 Windows: `scripts/install.ps1` with the same arguments. Remove with
-`--uninstall`; preview with `--dry-run`. Python 3 is the only requirement.
+`--uninstall`; preview with `--dry-run`. Python 3.9+ is the only requirement
+(CI checks 3.9–3.13).
 
 The installer vendors the canonical skill into `.agents/skills/noassume/`,
 creates `.noassume/` for configuration and state, and writes one always-on
 pointer into whatever mechanism your agent reads — `AGENTS.md`, `CLAUDE.md`,
 a Cursor rule, a Kiro steering file, etc. It never edits existing lines of
-your files; it manages one marked block you can delete cleanly.
+your files; it manages one marked block you can delete cleanly, plus
+dedicated files it owns and will not touch if it did not create them.
+
+## Updating
+
+Pull a newer NoAssume and re-run the installer; it refreshes the vendored
+skill and pointers in place:
+
+```bash
+cd NoAssume && git pull
+./scripts/install.sh codex --path ~/code/my-project
+```
+
+Your `.noassume/config.yaml`, `project.md`, and `local/` history are never
+touched by an update.
 
 ## Supported agents
 
@@ -76,6 +93,10 @@ DISCOVER → EXTRACT → CHALLENGE → CLARIFY ⇄ ABSORB → GATE → IMPLEMENT
 
 Full lifecycle spec: `skill/SKILL.md` + `skill/references/`. Design
 rationale: `docs/architecture.md`.
+
+One honest caveat: NoAssume is an instruction-layer guardrail. It strongly
+steers every agent it is installed into, but it cannot technically block a
+file write when a host or model ignores its instructions.
 
 ## Configure it
 

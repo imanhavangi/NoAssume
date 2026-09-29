@@ -32,7 +32,8 @@ maintenance. When in doubt, treat it as material. See `references/ambiguity.md`.
    user anything. Never ask what evidence already answers. See
    `references/discovery.md`.
 2. **Extract** — decompose the request into requirements, constraints, and
-   unknowns. Record them in `.noassume/local/`. See `references/state.md`.
+   unknowns. Record them in `.noassume/local/current/`. See
+   `references/state.md`.
 3. **Challenge** — attack your own interpretation: could two competent
    engineers build materially different things from this spec? Every "yes" is
    an ambiguity. See `references/ambiguity.md`.
@@ -42,10 +43,12 @@ maintenance. When in doubt, treat it as material. See `references/ambiguity.md`.
 5. **Absorb** — record answers as decisions, then re-audit the affected parts
    of the spec. Answers routinely create second-order ambiguities; loop until
    none remain.
-6. **Gate** — when blocking ambiguities, material ambiguities, and unresolved
-   conflicts are all zero, write the plan and Definition of Done, then proceed.
-   The gate is binary: READY or NOT READY. Do not ask permission to continue —
-   if the user asked for implementation, implement. See `references/gate.md`.
+6. **Gate** — when every criterion in `references/gate.md` holds — zero
+   blocking and material ambiguities, zero material assumptions, zero
+   unresolved conflicts, zero unresolved protected decisions — write the plan
+   and Definition of Done, then proceed. The gate is binary: READY or NOT
+   READY. Do not ask permission to continue — if the user asked for
+   implementation, implement. See `references/gate.md`.
 7. **Implement** — follow the plan and the decision ledger. Pause and clarify
    any material ambiguity discovered mid-flight; never silently expand scope.
    See `references/implementation.md`.
@@ -112,11 +115,13 @@ Persistent state lives in `.noassume/`:
 - `.noassume/config.yaml` — policy. Committed; shared by the team.
 - `.noassume/project.md` — permanent project rules the user has promoted.
   Committed.
-- `.noassume/local/` — session state: decision ledger, ambiguity ledger,
-  assumption log, plan, discovery cache. Never committed.
+- `.noassume/local/` — session state, never committed: `current/` holds the
+  live task's ledgers, plan, and state; `repository.md` caches discovery
+  knowledge; `history/` archives finished tasks.
 
-If `.noassume/` does not exist, bootstrap it from `templates/` before the first
-clarification round. Full file formats: `references/state.md`.
+If `.noassume/` does not exist, bootstrap it from `templates/` before the
+first clarification round. Full file formats and the task lifecycle:
+`references/state.md`.
 
 ## Non-negotiable rules
 

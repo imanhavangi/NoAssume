@@ -3,8 +3,11 @@
 
 Vendors the canonical skill into a repository and writes a thin always-on
 pointer into the mechanism each agent already reads. Idempotent, additive,
-and conservative: it never overwrites user files — managed content lives
-inside `<!-- noassume:begin/end -->` markers or in dedicated files.
+and conservative: shared files are only touched inside
+`<!-- noassume:begin/end -->` markers, and dedicated files (rule files,
+skill stubs, the vendored skill) are only created, updated, or removed when
+NoAssume wrote them. A foreign file at a managed path is never overwritten
+or deleted — the installer reports a conflict and leaves it untouched.
 
 Usage:
     install.py AGENT [AGENT ...] [--path DIR] [--global] [--uninstall]
@@ -29,6 +32,8 @@ POINTER_GLOBAL_SRC = REPO_ROOT / "agents" / "pointer-global.md"
 
 BEGIN = "<!-- noassume:begin -->"
 END = "<!-- noassume:end -->"
+MANAGED_FILE = "<!-- noassume:managed-file -->"
+LEGACY_STUB_SNIPPET = "that file is the canonical protocol"
 GITIGNORE_STANZA = "# NoAssume local state\n.noassume/local/\n"
 
 SKILL_DIR_NAME = "noassume"
@@ -55,6 +60,7 @@ name: noassume
 description: NoAssume clarification guardrail. Resolves material ambiguity with the user before implementing; blocks silent assumptions.
 ---
 
+<!-- noassume:managed-file -->
 Read and follow `{skill_path}` — that file is the canonical protocol.
 """
 
@@ -173,15 +179,70 @@ def remove_block(existing: str) -> str | None:
     return (out + "\n") if out else None
 
 
-def write_file(path: Path, content: str, rep: Reporter, kind: str) -> None:
-    if path.exists() and path.read_text() == content:
-        rep.record(kind, path, "unchanged")
-        return
-    rep.record(kind, path, "update" if path.exists() else "create")
+def is_managed(content: str) -> bool:
+    """True when NoAssume wrote (or previously wrote) this dedicated file."""
+    return (BEGIN in content or MANAGED_FILE in content
+            or "name: noassume" in content
+            or LEGACY_STUB_SNIPPET in content)
+
+
+def write_managed_file(path: Path, content: str, rep: Reporter,
+                       kind: str) -> bool:
+    """Create or update a NoAssume-owned file. Never touches foreign files.
+
+    Returns False when the path holds a file NoAssume did not write.
+    """
+    if path.exists():
+        current = path.read_text()
+        if current == content:
+            rep.record(kind, path, "unchanged")
+            return True
+        if not is_managed(current):
+            rep.record(kind, path, "CONFLICT — not managed by NoAssume")
+            print(
+                f"noassume: refusing to overwrite {path}: it exists and was "
+                f"not written by NoAssume. Merge or move it manually, then "
+                f"re-run the installer.",
+                file=sys.stderr,
+            )
+            return False
+        rep.record(kind, path, "update")
+    else:
+        rep.record(kind, path, "create")
     if rep.dry_run:
-        return
+        return True
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
+    return True
+
+
+def remove_managed_file(path: Path, rep: Reporter, kind: str) -> bool:
+    """Delete a dedicated file only when NoAssume owns it."""
+    if not path.exists():
+        rep.record("remove file", path, "absent")
+        return True
+    if not is_managed(path.read_text()):
+        rep.record("remove file", path, "kept — not managed by NoAssume")
+        print(
+            f"noassume: leaving {path} untouched: it was not written by "
+            f"NoAssume. Delete it manually if unwanted.",
+            file=sys.stderr,
+        )
+        return True
+    rep.record("remove file", path, "delete")
+    if not rep.dry_run:
+        path.unlink()
+    return True
+
+
+def prune_empty_dirs(path: Path, stop: Path) -> None:
+    d = path.parent
+    while d != stop and d != d.parent:
+        try:
+            d.rmdir()  # only succeeds when empty
+        except OSError:
+            break
+        d = d.parent
 
 
 def apply_block(path: Path, block: str, rep: Reporter, uninstall: bool) -> None:
@@ -199,11 +260,41 @@ def apply_block(path: Path, block: str, rep: Reporter, uninstall: bool) -> None:
         else:
             rep.record("remove block", path, "no block found")
         return
-    write_file(path, upsert_block(existing, block), rep, "pointer block")
+    updated = upsert_block(existing, block)
+    if updated == existing:
+        rep.record("pointer block", path, "unchanged")
+        return
+    rep.record("pointer block", path, "update" if existing else "create")
+    if not rep.dry_run:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(updated)
 
 
-def copy_skill(dest: Path, rep: Reporter) -> None:
+def copy_skill(dest: Path, rep: Reporter) -> bool:
     src_files = sorted(p for p in SKILL_SRC.rglob("*") if p.is_file())
+    rels = {p.relative_to(SKILL_SRC) for p in src_files}
+    marker = dest / "SKILL.md"
+    if dest.exists() and any(dest.iterdir()):
+        if not marker.exists():
+            rep.record("vendor skill", dest,
+                       "CONFLICT — directory not managed by NoAssume")
+            print(
+                f"noassume: refusing to vendor the skill into {dest}: the "
+                f"directory exists and has no NoAssume SKILL.md. Inspect it "
+                f"and resolve the conflict manually.",
+                file=sys.stderr,
+            )
+            return False
+        if not is_managed(marker.read_text()):
+            rep.record("vendor skill", dest,
+                       "CONFLICT — SKILL.md not managed by NoAssume")
+            print(
+                f"noassume: refusing to update {dest}: its SKILL.md was not "
+                f"written by NoAssume. If it is a stale copy from an older "
+                f"NoAssume, delete it and re-run.",
+                file=sys.stderr,
+            )
+            return False
     changed = 0
     for src in src_files:
         rel = src.relative_to(SKILL_SRC)
@@ -214,11 +305,26 @@ def copy_skill(dest: Path, rep: Reporter) -> None:
         if not rep.dry_run:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
+    removed = 0
+    if not rep.dry_run and dest.exists():
+        for dst in sorted(dest.rglob("*"), key=lambda p: len(p.parts),
+                          reverse=True):
+            if dst.is_file() and dst.relative_to(dest) not in rels:
+                dst.unlink()
+                removed += 1
+                changed += 1
+        for d in sorted((p for p in dest.rglob("*") if p.is_dir()),
+                        key=lambda p: len(p.parts), reverse=True):
+            try:
+                d.rmdir()  # only succeeds when empty
+            except OSError:
+                pass
     rep.record(
         "vendor skill",
         dest,
         "unchanged" if changed == 0 else f"{changed} file(s)",
     )
+    return True
 
 
 def ensure_gitignore(repo: Path, rep: Reporter, uninstall: bool) -> None:
@@ -243,7 +349,9 @@ def ensure_gitignore(repo: Path, rep: Reporter, uninstall: bool) -> None:
     if content and not content.endswith("\n"):
         content += "\n"
     content += ("\n" if content.strip() else "") + GITIGNORE_STANZA
-    write_file(gi, content, rep, "gitignore")
+    rep.record("gitignore", gi, "update" if existing else "create")
+    if not rep.dry_run:
+        gi.write_text(content)
 
 
 def init_state(repo: Path, rep: Reporter) -> None:
@@ -258,9 +366,10 @@ def init_state(repo: Path, rep: Reporter) -> None:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
     local = repo / ".noassume" / "local"
-    rep.record("init state", local, "create" if not local.exists() else "unchanged")
-    if not rep.dry_run:
-        local.mkdir(parents=True, exist_ok=True)
+    for d in (local, local / "current", local / "history"):
+        rep.record("init state", d, "create" if not d.exists() else "unchanged")
+        if not rep.dry_run:
+            d.mkdir(parents=True, exist_ok=True)
 
 
 def resolve(relpath: str, base: Path) -> Path:
@@ -292,9 +401,11 @@ def main() -> int:
 
     skill_dest = GLOBAL_SKILL_DIR if args.global_ else base / PROJECT_SKILL_REL
     pointer = load_pointer(args.global_, skill_dest)
+    conflicts = 0
 
     if not args.uninstall:
-        copy_skill(skill_dest, rep)
+        if not copy_skill(skill_dest, rep):
+            conflicts += 1
         if not args.global_:
             init_state(base, rep)
             ensure_gitignore(base, rep, uninstall=False)
@@ -312,41 +423,46 @@ def main() -> int:
                 apply_block(path, pointer, rep, args.uninstall)
             elif isinstance(act, RuleFile):
                 if args.uninstall:
-                    if path.exists():
-                        rep.record("remove file", path, "delete")
-                        if not rep.dry_run:
-                            path.unlink()
-                    else:
-                        rep.record("remove file", path, "absent")
+                    remove_managed_file(path, rep, "rule file")
                 else:
-                    write_file(path, act.frontmatter + pointer, rep, "rule file")
+                    if not write_managed_file(path, act.frontmatter + pointer,
+                                              rep, "rule file"):
+                        conflicts += 1
             elif isinstance(act, Stub):
                 if args.uninstall:
-                    if path.exists():
-                        rep.record("remove file", path, "delete")
-                        if not rep.dry_run:
-                            path.unlink()
-                    else:
-                        rep.record("remove file", path, "absent")
+                    remove_managed_file(path, rep, "skill stub")
+                    prune_empty_dirs(path, base)
                 else:
                     # project stubs must stay relocatable → repo-relative path;
                     # global stubs need the absolute install location
                     rendered = str(skill_dest / "SKILL.md") if args.global_ \
                         else str(PROJECT_SKILL_REL / "SKILL.md")
-                    write_file(path, STUB_TEMPLATE.format(
-                        skill_path=rendered), rep, "skill stub")
+                    if not write_managed_file(path, STUB_TEMPLATE.format(
+                            skill_path=rendered), rep, "skill stub"):
+                        conflicts += 1
 
     if args.uninstall:
+        marker = skill_dest / "SKILL.md"
         if skill_dest.exists():
-            rep.record("remove skill", skill_dest, "delete")
-            if not rep.dry_run:
-                shutil.rmtree(skill_dest)
-                # prune empty parents we created (.agents/skills, .agents)
-                for parent in (skill_dest.parent, skill_dest.parent.parent):
-                    try:
-                        parent.rmdir()  # only removes if empty
-                    except OSError:
-                        break
+            if marker.exists() and is_managed(marker.read_text()):
+                rep.record("remove skill", skill_dest, "delete")
+                if not rep.dry_run:
+                    shutil.rmtree(skill_dest)
+                    # prune empty parents we created (.agents/skills, .agents)
+                    for parent in (skill_dest.parent, skill_dest.parent.parent):
+                        try:
+                            parent.rmdir()  # only removes if empty
+                        except OSError:
+                            break
+            else:
+                rep.record("remove skill", skill_dest,
+                           "kept — not managed by NoAssume")
+                print(
+                    f"noassume: leaving {skill_dest} untouched: its SKILL.md "
+                    f"was not written by NoAssume. Inspect and delete "
+                    f"manually if unwanted.",
+                    file=sys.stderr,
+                )
         if not args.global_:
             ensure_gitignore(base, rep, uninstall=True)
         print(rep.summary())
@@ -355,7 +471,7 @@ def main() -> int:
         return 0
 
     print(rep.summary())
-    return 0
+    return 1 if conflicts else 0
 
 
 if __name__ == "__main__":

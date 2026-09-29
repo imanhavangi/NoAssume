@@ -18,11 +18,13 @@ mode: balanced   # balanced | strict | critical
 You can also change mode per task in conversation ("run this in strict").
 Task risk escalates automatically — auth, production, destructive, and
 infrastructure work run at higher floors regardless of the configured mode.
+That floor is built into the protocol and has no configuration switch.
 
 ## Delegating categories
 
 Each `clarify.*` key is a decision category. `true` means "ask when evidence
-is silent"; `false` means "decide it yourself and log the choice":
+is silent"; `false` means "decide it yourself and record the choice as a
+DELEGATED decision with `config.yaml` as the source":
 
 ```yaml
 clarify:
@@ -40,11 +42,11 @@ behavior:
   recommend_options: true            # show a recommendation on questions
   deep_repository_discovery: true    # deep scan on first task, verify after
   monitor_implementation: true       # keep guarding after the gate opens
-  auto_escalate: true                # let task risk raise strictness
 ```
 
-`monitor_implementation: false` gives you gate-only mode: clarification still
-happens, but the mid-flight guard and deviation audit stand down.
+`monitor_implementation: false` gives you gate-only mode: clarification and
+the gate still run, the mid-flight guard stands down, and only the final
+audit remains.
 
 ## Permanent rules
 

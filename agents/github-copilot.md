@@ -21,10 +21,12 @@ pointer into `~/.copilot/copilot-instructions.md`.
 
 ## Notes
 
-- Repository-wide instructions reach Copilot chat, the coding agent, and code
-  review. The coding agent also reads `AGENTS.md` — installing the `agentsmd`
+- Copilot discovers skills natively, and `.agents/skills/` is one of its
+  project skill locations — the vendored skill needs no extra wiring for
+  Copilot CLI, the coding agent, code review, and IDE agent modes.
+- Native skills load on demand, when the model judges them relevant. The
+  repository-wide instructions block remains necessary as the guaranteed
+  pre-implementation gate: it is always in context and tells the agent to
+  read and follow the skill before writing code.
+- The coding agent also reads `AGENTS.md` — installing the `agentsmd`
   adapter alongside `copilot` covers both entry points.
-- Copilot has no native skills mechanism; the instructions block tells the
-  agent to read `.agents/skills/noassume/SKILL.md` directly. Any Copilot
-  surface that cannot read repository files during a turn gets the core rule
-  from the block itself, not the full protocol.

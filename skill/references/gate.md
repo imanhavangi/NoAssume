@@ -8,22 +8,25 @@ either opens or it does not.
 ```
 READY requires, simultaneously:
 
-  blocking ambiguities          = 0
-  material ambiguities          = 0
-  unresolved conflicts          = 0
-  unprotected-decision attempts = 0
-  plan written                  = yes
-  Definition of Done written    = yes
+  blocking ambiguities            = 0
+  material ambiguities            = 0
+  material assumptions            = 0
+  unresolved conflicts            = 0
+  unresolved protected decisions  = 0
+  plan written                    = yes
+  Definition of Done written      = yes
 ```
 
 Everything unresolved at this point must be either delegated or defaultable
-under the active config. If any row in `.noassume/local/ambiguities.md` is
-still `open` at blocking or material severity, the gate is NOT READY and you
-return to Clarify.
+under the active config. If any row in `.noassume/local/current/ambiguities.md`
+is still `open` at blocking or material severity, the gate is NOT READY and you
+return to Clarify. "Unresolved protected decisions" means protected decisions
+the user's request did not already name explicitly and that have not received
+an informed override — there must be none.
 
 ## The plan
 
-Write `.noassume/local/plan.md` from `templates/plan.md`. Keep it operational —
+Write `.noassume/local/current/plan.md` from `templates/plan.md`. Keep it operational —
 the plan is the contract you will be audited against, not a design document:
 
 - **Goal** — one paragraph, the user-visible outcome.

@@ -1,12 +1,13 @@
 # NoAssume configuration — committed, shared by the team.
 #
 # Defaults below are opinionated. Set any clarify.* key to false to delegate
-# that whole category of decisions to the agent permanently. The agent will
-# still log what it chose; false means "don't ask", not "don't record".
+# that whole category of decisions to the agent permanently. The agent still
+# records what it chose — as a DELEGATED decision with this file as source —
+# so false means "don't ask", not "don't record".
 
 # Baseline strictness: balanced | strict | critical
-# Task risk can escalate above this automatically — it never goes below the
-# task's risk floor. See references/config.md.
+# Task risk escalates above this automatically. The risk floor is part of the
+# protocol, not the config — it has no off switch. See references/config.md.
 mode: balanced
 
 # Decision categories that stay gated (true = ask when evidence is silent).
@@ -33,6 +34,3 @@ behavior:
   deep_repository_discovery: true
   # Guard the implementation phase, not just the gate.
   monitor_implementation: true
-  # Let task risk raise strictness above `mode`. Turning this off is legal
-  # and inadvisable.
-  auto_escalate: true

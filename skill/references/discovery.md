@@ -40,7 +40,7 @@ question about this repository.
 ## Incremental discovery
 
 The first task in a repository does a deep pass. Record what you learned in
-`.noassume/local/state.md` under `## Repository knowledge`.
+`.noassume/local/repository.md`.
 
 Later tasks reuse that knowledge — but only after verifying it still holds for
 the area you are touching. Manifests change; conventions drift. Re-scan deeply
